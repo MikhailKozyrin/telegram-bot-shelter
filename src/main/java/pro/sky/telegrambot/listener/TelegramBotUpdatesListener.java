@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,7 +31,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-            // Process your updates here
+            String incomingMessage = getIncomingMessage(update);
+            Long chatId = getId(update);
+
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
@@ -45,4 +48,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    private Long getId(Update update){
+        Long chatId = update.message().chat().id();  // метод, в основном предназначен для логирования запроса id чата
+        logger.info("Получен id чата: " + chatId);
+        return chatId;
+    }
+
+    private String getIncomingMessage (Update update){    // метод, в основном предназначен для логирования получения сообщения
+        String incomingMessage = update.message().text();
+        logger.info("Получено сообщение: " + incomingMessage);
+        return incomingMessage;
+    }
 }
