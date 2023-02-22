@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,9 +30,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-            String incomingMessage = getIncomingMessage(update);
-            Long chatId = getId(update);
-
+            processingReceivedMessage(update);
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
@@ -50,13 +47,30 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private Long getId(Update update){
         Long chatId = update.message().chat().id();  // метод, в основном предназначен для логирования запроса id чата
-        logger.info("Получен id чата: " + chatId);
+        logger.trace("Получен id чата: " + chatId);
         return chatId;
     }
 
     private String getIncomingMessage (Update update){    // метод, в основном предназначен для логирования получения сообщения
         String incomingMessage = update.message().text();
-        logger.info("Получено сообщение: " + incomingMessage);
+        logger.trace("Получено сообщение: " + incomingMessage);
         return incomingMessage;
+    }
+
+    private void processingReceivedMessage(Update update){
+        if (getIncomingMessage(update).equals("/start")){   //в этом методе будут обрабатываться входящие сообщения,
+            responseToStart(update);                        //он будет пополняться
+        }
+    }
+
+    private void responseToStart(Update update){
+        String greetings = "Приветствуем вас. Этот бот поможет вам бла бла бла"; //метод, прелназначенный для ответа на стартовое сообщение
+        String menu = "1 - Узнать информацию о приюте\n" +
+                "2 - Как взять собаку из приюта\n" +
+                "3 - Прислать отчет о питомце\n" +
+                "4 - Позвать волонтера";
+        sendMessage(greetings,getId(update));
+        sendMessage(menu,getId(update));
+        logger.info("Отправлено меню на выбор пользователю: " + getId(update));
     }
 }
