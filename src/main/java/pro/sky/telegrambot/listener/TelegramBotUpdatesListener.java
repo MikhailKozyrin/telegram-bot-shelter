@@ -21,6 +21,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
+    @Autowired
     private TelegramBot telegramBot;
 
     @PostConstruct
