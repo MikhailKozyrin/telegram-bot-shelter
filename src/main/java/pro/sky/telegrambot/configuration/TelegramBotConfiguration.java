@@ -6,6 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * <b>Конфигурация Телеграм-Бота</b><br>
+ * Указан токен
+ */
 @Configuration
 public class TelegramBotConfiguration {
 

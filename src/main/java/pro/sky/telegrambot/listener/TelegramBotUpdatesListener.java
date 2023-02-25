@@ -13,12 +13,14 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.List;
 
+/**
+ * <b>Методы и обработка всех действий в Телеграм-боте</b>
+ */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
-    private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
-    @Autowired
     private TelegramBot telegramBot;
 
     @PostConstruct
@@ -26,6 +28,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.setUpdatesListener(this);
     }
 
+    /**
+     * <b>Обработка входящих сообщений</b><br>
+     * Используется интерфейс UpdateListener
+     * @param updates available updates, не может быть null
+     * @return Успешная обработка
+     */
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
@@ -35,42 +43,67 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
-    private void sendMessage(String message, Long chatId) {           //метод для отправки сообщения пользователю,
-        SendMessage sendMessage = new SendMessage(chatId, message);   //укажите само сообщение и id чата
+    /**
+     * <b>Метод для отправки сообщения пользователю</b><br>
+     * Указать само сообщение и id чата
+     * @param message должно быть отправлено
+     * @param chatId не может быть null
+     */
+    private void sendMessage(String message, Long chatId) {
+        SendMessage sendMessage = new SendMessage(chatId, message);
         SendResponse response = telegramBot.execute(sendMessage);
         if (!response.isOk()) {
             logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
-        }else {
+        } else {
             logger.info("Сообщение отправлено: " + message);
         }
     }
 
-    private Long getId(Update update){
-        Long chatId = update.message().chat().id();  // метод, в основном предназначен для логирования запроса id чата
+    /**
+     * <b>Метод для логирования запроса id чата</b>
+     * @param update не можеть быть null
+     * @return Полученный Id чата
+     */
+    private Long getId(Update update) {
+        Long chatId = update.message().chat().id();
         logger.trace("Получен id чата: " + chatId);
         return chatId;
     }
 
-    private String getIncomingMessage (Update update){    // метод, в основном предназначен для логирования получения сообщения
+    /**
+     * <b>Метод для логирования получения сообщения</b>
+     * @param update не можеть быть null
+     * @return Полученное сообщение
+     */
+    private String getIncomingMessage(Update update) {
         String incomingMessage = update.message().text();
         logger.trace("Получено сообщение: " + incomingMessage);
         return incomingMessage;
     }
 
-    private void processingReceivedMessage(Update update){
-        if (getIncomingMessage(update).equals("/start")){   //в этом методе будут обрабатываться входящие сообщения,
-            responseToStart(update);                        //он будет пополняться
+    /**
+     * <b>Метод для обработки входящих сообщений</b><br>
+     * Постоянно обновляется
+     * @param update
+     */
+    private void processingReceivedMessage(Update update) {
+        if (getIncomingMessage(update).equals("/start")) {
+            responseToStart(update);
         }
     }
 
-    private void responseToStart(Update update){
-        String greetings = "Приветствуем вас. Этот бот поможет вам бла бла бла"; //метод, прелназначенный для ответа на стартовое сообщение
+    /**
+     * <b>Метод для ответа на стартовое сообщение</b><br>
+     * @param update
+     */
+    private void responseToStart(Update update) {
+        String greetings = "Приветствуем вас! Этот бот поможет вам выбрать собаку из приюта. Благодраим вас за обращение и за помощь маленьким питомцам";
         String menu = "1 - Узнать информацию о приюте\n" +
                 "2 - Как взять собаку из приюта\n" +
                 "3 - Прислать отчет о питомце\n" +
                 "4 - Позвать волонтера";
-        sendMessage(greetings,getId(update));
-        sendMessage(menu,getId(update));
+        sendMessage(greetings, getId(update));
+        sendMessage(menu, getId(update));
         logger.info("Отправлено меню на выбор пользователю: " + getId(update));
     }
 }

@@ -6,6 +6,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.util.Objects;
 
+/**
+ * <b>Модель регистрации клиента</b><br>
+ * Контактная информация по клиенту: Id, ФИО, мобильный телефон
+ */
 @Entity
 public class clientRegistration {
 
