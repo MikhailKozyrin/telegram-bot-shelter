@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.List;
 
+import static pro.sky.telegrambot.constants.Constants.*;
+
 /**
  * <b>Методы и обработка всех действий в Телеграм-боте</b>
  */
@@ -76,14 +78,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void processingReceivedMessage(Update update) {
         if (getIncomingMessage(update).equals("/start")) {
             responseToStart(update);
-        } else if (getIncomingMessage(update).equals("Узнать информацию о приюте")) {
+        } else if (getIncomingMessage(update).equals(INFORMATION_ABOUT_SHELTER)) {
             newUserConsultation(update);
-        } else if (getIncomingMessage(update).equals("Как взять собаку из приюта")) {
+        } else if (getIncomingMessage(update).equals(TAKE_ON_THE_DOG)) {
             consultationWithAPotentialGuardian(update);
 
-        } else if (getIncomingMessage(update).equals("Прислать отчет о питомце")) {
+        } else if (getIncomingMessage(update).equals(SEND_A_REPORT)) {
 
-        } else if (getIncomingMessage(update).equals("Позвать волонтера")){
+        } else if (getIncomingMessage(update).equals(CALL_VOLUNTEER)){
 
         }
     }
@@ -93,12 +95,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param update
      */
     private void responseToStart(Update update) {  // переделал этот метод, ранее он обращался к методу sendMessage, но пришлось переделать, потому что так я не могу прикрепить клавиатуру к сообщению
-        String message = "Приветствуем вас! Этот бот поможет вам выбрать собаку из приюта. Благодарим вас за обращение и за помощь маленьким питомцам";
+        String message = WELCOME_TEXT;
         Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Узнать информацию о приюте"},
-                new String[]{"Как взять собаку из приюта"},
-                new String[]{"Прислать отчет о питомце"},
-                new String[]{"Позвать волонтера"})
+                new String[]{INFORMATION_ABOUT_SHELTER},
+                new String[]{TAKE_ON_THE_DOG},
+                new String[]{SEND_A_REPORT},
+                new String[]{CALL_VOLUNTEER})
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
@@ -113,17 +115,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     private void consultationWithAPotentialGuardian(Update update) { //метод, необходимый для Этап 2(ТЗ)
-        String message = "Приветствуем вас! бла бла бла. Этот раздел нужен, если вы реально заинтересованы в том, чтобы взять у нас собаку";
+        String message = WELCOME_TEXT_TAKE_ON_THE_DOG;
         Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Правила знакомства с собакой"},
-                new String[]{"Список необходимых документов"},
-                new String[]{"Список рекомендаций по транспортировке животного"},
-                new String[]{"Список рекомендаций по обустройству дома для собак"},
-                new String[]{"Советы кинолога"},
-                new String[]{"Рекомендации по проверенным кинологам"},
-                new String[]{"Возможные причины отказа"},
-                new String[]{"Оставить контактный данные"},
-                new String[]{"Позвать волонтера"})
+                new String[]{DATING_RULES},
+                new String[]{LIST_OF_DOCUMENTS},
+                new String[]{TRANSPORTATION},
+                new String[]{HOME_IMPROVEMENT},
+                new String[]{TIPS_FROM_A_DOG_HANDLER},
+                new String[]{RECOMMENDATION_DOG_HANDLER},
+                new String[]{REASONS_FOR_REFUSAL},
+                new String[]{LEAVE_CONTACTS},
+                new String[]{CALL_VOLUNTEER})
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
@@ -155,14 +157,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     }
 
-    private void newUserConsultation(Update update){ //метод, необходимый для этап 1 ТЗ
-        String message = "Бот приветствует пользователя. (бла бла бла)";
+    private void newUserConsultation(Update update){ //метод, необходимый для этапа 1 ТЗ
+        String message = WELCOME_TEXT_INFORMATION_ABOUT_SHELTER;
         Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{"Информация о нашем приюте"},
-                new String[]{"Расписание работы и адрес"},
-                new String[]{"Техника безопасности"},
-                new String[]{"Оставить контактный данные"},
-                new String[]{"Позвать волонтера"})
+                new String[]{INFORMATION_ABOUT_SHELTER},
+                new String[]{ADDRESS},
+                new String[]{SAFETY_PRECAUTIONS},
+                new String[]{LEAVE_CONTACTS},
+                new String[]{CALL_VOLUNTEER})
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional

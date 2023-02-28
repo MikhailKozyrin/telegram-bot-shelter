@@ -11,14 +11,14 @@ import java.util.Objects;
  * Контактная информация по клиенту: Id, ФИО, мобильный телефон
  */
 @Entity
-public class clientRegistration {
+public class ClientRegistration {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
     private long userId;
-    private String FNS;
+    private String name;
     private String pleaseOfResidence;
     private String mobileNumber;
 
@@ -38,12 +38,12 @@ public class clientRegistration {
         this.userId = userId;
     }
 
-    public String getFNS() {
-        return FNS;
+    public String getName() {
+        return name;
     }
 
-    public void setFNS(String FNS) {
-        this.FNS = FNS;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPleaseOfResidence() {
@@ -66,12 +66,14 @@ public class clientRegistration {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        clientRegistration that = (clientRegistration) o;
-        return userId == that.userId && Objects.equals(id, that.id) && Objects.equals(FNS, that.FNS) && Objects.equals(pleaseOfResidence, that.pleaseOfResidence) && Objects.equals(mobileNumber, that.mobileNumber);
+        ClientRegistration that = (ClientRegistration) o;
+        return userId == that.userId && Objects.equals(id, that.id) && Objects.equals(name, that.name)
+                && Objects.equals(pleaseOfResidence, that.pleaseOfResidence)
+                && Objects.equals(mobileNumber, that.mobileNumber);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, userId, FNS, pleaseOfResidence, mobileNumber);
+        return Objects.hash(id, userId, name, pleaseOfResidence, mobileNumber);
     }
 }
