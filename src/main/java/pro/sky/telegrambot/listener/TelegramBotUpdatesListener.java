@@ -82,8 +82,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             newUserConsultation(update);
         } else if (getIncomingMessage(update).equals(TAKE_ON_THE_DOG)) {
             consultationWithAPotentialGuardian(update);
-
-        } else if (getIncomingMessage(update).equals(SEND_A_REPORT)) {
+        } else if (getIncomingMessage(update).equals(HOME_IMPROVEMENT)) {
+            homeFurnishingForDogs(update);
 
         } else if (getIncomingMessage(update).equals(CALL_VOLUNTEER)){
 
@@ -104,6 +104,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
+        sendMessage(update, message, replyKeyboardMarkup);
+    }
+    /**
+     * <b>Метод для отправки сообщения пользователю</b><br>
+     * Указать само сообщение и id чата
+     * @param message должно быть отправлено
+     */
+    private void sendMessage(Update update, String message, Keyboard replyKeyboardMarkup) {
         SendMessage sendMessage = new SendMessage(getId(update),message).replyMarkup(replyKeyboardMarkup);
         SendResponse response = telegramBot.execute(sendMessage);
         if (!response.isOk()) {
@@ -111,7 +119,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } else {
             logger.info("Сообщение отправлено: " + message);
         }
-        logger.info("Отправлено меню на выбор пользователю: " + getId(update));
     }
 
     private void consultationWithAPotentialGuardian(Update update) { //метод, необходимый для Этап 2(ТЗ)
@@ -129,32 +136,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
-        SendMessage sendMessage = new SendMessage(getId(update),message).replyMarkup(replyKeyboardMarkup);
-        SendResponse response = telegramBot.execute(sendMessage);
-        if (!response.isOk()) {
-            logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
-        } else {
-            logger.info("Сообщение отправлено: " + message);
-        }
-        logger.info("Отправлено меню на выбор пользователю: " + getId(update));
-
-    }
-
-    /**
-     * <b>Метод для отправки сообщения пользователю</b><br>
-     * Указать само сообщение и id чата
-     * @param message должно быть отправлено
-     * @param chatId не может быть null
-     */
-    private void sendMessage(String message, Long chatId) {
-        SendMessage sendMessage = new SendMessage(chatId,message);
-        SendResponse response = telegramBot.execute(sendMessage);
-        if (!response.isOk()) {
-            logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
-        } else {
-            logger.info("Сообщение отправлено: " + message);
-        }
-
+        sendMessage(update, message, replyKeyboardMarkup);
     }
 
     private void newUserConsultation(Update update){ //метод, необходимый для этапа 1 ТЗ
@@ -168,13 +150,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
-        SendMessage sendMessage = new SendMessage(getId(update),message).replyMarkup(replyKeyboardMarkup);
-        SendResponse response = telegramBot.execute(sendMessage);
-        if (!response.isOk()) {
-            logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
-        } else {
-            logger.info("Сообщение отправлено: " + message);
-        }
-        logger.info("Отправлено меню на выбор пользователю: " + getId(update));
+        sendMessage(update, message, replyKeyboardMarkup);
+    }
+
+    private void homeFurnishingForDogs(Update update){ //метод, который выводит кнопки с рекомендациями по обустройству собак, щенков, и т.д.
+        String message = HOME_IMPROVEMENT_ANSWER;
+        Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                new String[]{FOR_A_PUPPY},
+                new String[]{FOR_AN_ADULT_DOG},
+                new String[]{FOR_A_SICK_DOG})
+                .oneTimeKeyboard(true)   // optional
+                .resizeKeyboard(true)    // optional
+                .selective(true);        // optional
+        sendMessage(update, message, replyKeyboardMarkup);
+
     }
 }
