@@ -1,14 +1,11 @@
 package pro.sky.telegrambot.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Objects;
 
 /**
  * <b>Модель регистрации клиента</b><br>
- * Контактная информация по клиенту: Id, ФИО, мобильный телефон
+ * Контактная информация по клиенту: Id, имя, место регистрации, мобильный телефон
  */
 @Entity
 public class ClientRegistration {
@@ -21,7 +18,9 @@ public class ClientRegistration {
     private String name;
     private String pleaseOfResidence;
     private String mobileNumber;
-
+    @ManyToOne
+    @JoinColumn(name = "volunteer_id")
+    private Volunteer volunteer;
     public Long getId() {
         return id;
     }
@@ -75,5 +74,19 @@ public class ClientRegistration {
     @Override
     public int hashCode() {
         return Objects.hash(id, userId, name, pleaseOfResidence, mobileNumber);
+    }
+//    public Volunteer getVolunteer() {
+//        return volunteer;
+//    }
+
+    @Override
+    public String toString() {
+        return "Клиент" +
+                "id " + id +
+                ", userId " + userId +
+                ", Имя " + name + '\'' +
+                ", Место регистрации " + pleaseOfResidence + '\'' +
+                ", Мобильный номер телефона " + mobileNumber + '\'' +
+                '}';
     }
 }

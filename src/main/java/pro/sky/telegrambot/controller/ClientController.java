@@ -3,10 +3,12 @@ package pro.sky.telegrambot.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.telegrambot.model.ClientRegistration;
+import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.service.ClientService;
 
 @RestController
@@ -24,7 +26,21 @@ public class ClientController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Найден клиент с параметрами",
+                            description = "Найден клиент",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Не найден клиент",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Сервер не может обработать запрос",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE
                             )
@@ -42,22 +58,19 @@ public class ClientController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Добавлен новый клиент с параметрами",
+                            description = "Добавлен новый клиент",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE
                             )
                     )
             },
             tags = "Работа с клиентами"
-//            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-//                    description = "Параметры нового клиента",
-//                    content = @Content(
-//                            mediaType = MediaType.APPLICATION_JSON_VALUE
-//                    )
     )
 
     @PostMapping
-    public ClientRegistration createClient(@RequestBody ClientRegistration clientRegistration) {
+    public ClientRegistration createClient(@Parameter(description = "имя, место регистрации, номер мобильного телефона",
+            example = "1, Никита, Москва, 7(000)000-00-00")
+            @RequestBody ClientRegistration clientRegistration) {
         return clientService.createClient(clientRegistration);
     }
 
@@ -73,12 +86,8 @@ public class ClientController {
                     )
             },
             tags = "Работа с клиентами"
-//            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-//                    description = "Новые параметры клиента",
-//                    content = @Content(
-//                            mediaType = MediaType.APPLICATION_JSON_VALUE
-//                    )
     )
+
 
     @PutMapping
     public ClientRegistration editClient(@RequestBody ClientRegistration clientRegistration) {
