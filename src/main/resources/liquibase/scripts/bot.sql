@@ -32,5 +32,17 @@ CREATE TABLE report
     diet                            TEXT NOT NULL,
     well_being_and_addiction        TEXT NOT NULL,
     changeInBehavior                TEXT NOT NULL
-
 );
+
+-- changeset AlexSnegireff:6
+CREATE TABLE users
+(
+    chat_id BIGINT PRIMARY KEY ,
+    user_name TEXT,
+    mobile_number TEXT,
+    last_command TEXT,
+    volunteer_trigger BOOLEAN
+);
+
+
+
