@@ -1,9 +1,7 @@
 package pro.sky.telegrambot.service;
 
 import org.springframework.stereotype.Service;
-import pro.sky.telegrambot.exception.ClientNotFoundException;
 import pro.sky.telegrambot.exception.VolunteerNotFoundException;
-import pro.sky.telegrambot.model.ClientRegistration;
 import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.repository.VolunteerRepository;
 
@@ -15,10 +13,10 @@ public class VolunteerService {
         this.volunteerRepository = volunteerRepository;
     }
 
-    public Volunteer findVolunteer(Long id) {
-        Volunteer volunteer = volunteerRepository.findById(id).orElse(null);
+    public Volunteer findVolunteer(Long chatId) {
+        Volunteer volunteer = volunteerRepository.findById(chatId).orElse(null);
         if (volunteer == null) {
-            throw new VolunteerNotFoundException(id);
+            throw new VolunteerNotFoundException(chatId);
         }
         return volunteer;
     }
@@ -28,7 +26,7 @@ public class VolunteerService {
     }
 
     public Volunteer editVolunteer(Volunteer volunteer) {
-        if (volunteerRepository.findById(volunteer.getId()).orElse(null) == null) {
+        if (volunteerRepository.findById(volunteer.getChatId()).orElse(null) == null) {
             return null;
         }
         return volunteerRepository.save(volunteer);

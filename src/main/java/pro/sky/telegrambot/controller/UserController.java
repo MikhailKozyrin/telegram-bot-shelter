@@ -7,32 +7,32 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.telegrambot.model.Volunteer;
-import pro.sky.telegrambot.service.VolunteerService;
+import pro.sky.telegrambot.model.User;
+import pro.sky.telegrambot.service.UserService;
+
 
 @RestController
-@RequestMapping("/volunteer")
-public class VolunteerController {
+@RequestMapping("/user")
+public class UserController {
+    private final UserService userService;
 
-    private final VolunteerService volunteerService;
-
-    public VolunteerController(VolunteerService volunteerService) {
-        this.volunteerService = volunteerService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @Operation(
-            summary = "Поиск волонтера по chat_id",
+            summary = "Поиск пользователя приюта для собак по chat_id",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Найден волонтер",
+                            description = "Найден пользователь",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE
                             )
                     ),
                     @ApiResponse(
                             responseCode = "404",
-                            description = "Не найден волонтер",
+                            description = "Не найден пользователь",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE
                             )
@@ -45,63 +45,66 @@ public class VolunteerController {
                             )
                     )
             },
-            tags = "Работа с волонтерами"
+            tags = "Работа с пользователями приюта для собак"
     )
-    @GetMapping("{id}")
-    public Volunteer getVolunteer(@Parameter(description = "chat_id", example = "1") @PathVariable Long chatId) {
-        return volunteerService.findVolunteer(chatId);
+    @GetMapping("{chatId}")
+    public User getUser(@Parameter(description = "chat_id пользователя", example = "1236554")
+                                    @PathVariable Long chatId) {
+        return userService.findUser(chatId);
     }
 
     @Operation(
-            summary = "Добавление нового волонтера",
+            summary = "Добавление нового пользователя",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Добавлен новый волонтер с параметрами",
+                            description = "Добавлен новый пользователь с параметрами",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Volunteer.class)
+                                    schema = @Schema(implementation = User.class)
                             )
                     )
             },
-            tags = "Работа с волонтерами",
+            tags = "Работа с пользователями приюта для собак",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Параметры нового волонтера",
+                    description = "Параметры нового пользователя",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = Volunteer.class)
+                            schema = @Schema(implementation = User.class)
                     )
             )
     )
     @PostMapping
-    public Volunteer createVolunteer(@Parameter(description = "chat_id", example = "1")
-                                         @RequestBody Volunteer volunteer) {
-        return volunteerService.createVolunteer(volunteer);
+    public User createUser(@Parameter(description = "chat_id пользователя", example = "1259874")
+                                       @RequestBody User user) {
+        return userService.createUser(user);
     }
 
     @Operation(
-            summary = "Редактирование волонтера",
+            summary = "Редактирование пользователя",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Обновленный волонтер",
+                            description = "Обновленный пользователь",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Volunteer.class)
+                                    schema = @Schema(implementation = User.class)
                             )
                     )
             },
-            tags = "Работа с волонтерами",
+            tags = "Работа с пользователями приюта для собак",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Новые данные волонтера",
+                    description = "Новые данные пользователя",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = Volunteer.class)
+                            schema = @Schema(implementation = User.class)
                     )
             )
     )
     @PutMapping
-    public Volunteer editVolunteer(@RequestBody Volunteer volunteer) {
-        return volunteerService.editVolunteer(volunteer);
+    public User editUser(@RequestBody User user) {
+        return userService.editUser(user);
     }
 }
+
+

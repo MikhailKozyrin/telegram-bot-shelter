@@ -1,7 +1,5 @@
 package pro.sky.telegrambot.model;
 
-import liquibase.pro.packaged.C;
-
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.Objects;
@@ -11,16 +9,17 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "volunteers")
+
 public class Volunteer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Long chatId;
     private String name;
-    private String pleaseOfResidence;
+    private String lastCommand;
 
-    @OneToMany(mappedBy = "volunteer")
-    public Collection<ClientRegistration> clientRegistrations;
+
     public Volunteer() {
 
     }
@@ -33,6 +32,14 @@ public class Volunteer {
         this.id = id;
     }
 
+    public Long getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
+    }
+
     public String getName() {
         return name;
     }
@@ -41,33 +48,35 @@ public class Volunteer {
         this.name = name;
     }
 
-    public String getPleaseOfResidence() {
-        return pleaseOfResidence;
+    public String getLastCommand() {
+        return lastCommand;
     }
 
-    public void setPleaseOfResidence(String pleaseOfResidence) {
-        this.pleaseOfResidence = pleaseOfResidence;
+    public void setLastCommand(String lastCommand) {
+        this.lastCommand = lastCommand;
     }
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Volunteer volunteer = (Volunteer) o;
-        return Objects.equals(id, volunteer.id) && Objects.equals(name, volunteer.name) && Objects.equals(pleaseOfResidence, volunteer.pleaseOfResidence);
+        return Objects.equals(id, volunteer.id) && Objects.equals(chatId, volunteer.chatId) && Objects.equals(name, volunteer.name) && Objects.equals(lastCommand, volunteer.lastCommand);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, pleaseOfResidence);
+        return Objects.hash(id, chatId, name, lastCommand);
     }
 
     @Override
     public String toString() {
         return "Volunteer{" +
                 "id=" + id +
+                ", chatId=" + chatId +
                 ", name='" + name + '\'' +
-                ", pleaseOfResidence='" + pleaseOfResidence + '\'' +
+                ", lastCommand='" + lastCommand + '\'' +
                 '}';
     }
 }

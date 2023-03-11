@@ -2,8 +2,6 @@ package pro.sky.telegrambot.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pro.sky.telegrambot.exception.ClientNotFoundException;
-import pro.sky.telegrambot.model.ClientRegistration;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
 
@@ -15,7 +13,7 @@ public class UserService {
 
     public User findUser(Long ChatId) {
         User user = userRepository.findById(ChatId).orElse(null);
-        return user;
+                return user;
     }
 
     public User createUser(User user) {
