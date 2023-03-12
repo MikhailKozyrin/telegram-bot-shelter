@@ -82,8 +82,21 @@ CREATE TABLE report
     change_in_behavior              TEXT NOT NULL
 
 );
+-- changeset GlakovaA:13
+DROP TABLE volunteers
+-- changeset GlakovaA:14
+CREATE TABLE volunteers
+(
+    chat_id          BIGINT PRIMARY KEY,
+    name             TEXT,
+    last_command     TEXT
+);
+-- changeset GlakovaA:15
+ALTER TABLE report
+    ADD column users_chat_id  BIGINT REFERENCES users (chat_id);
 
-
+ALTER TABLE report
+    ADD column volunteers_chat_id  BIGINT REFERENCES volunteers (chat_id);
 
 
 

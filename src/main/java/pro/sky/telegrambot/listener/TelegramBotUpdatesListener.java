@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.User;
+import pro.sky.telegrambot.model.Volunteer;
+import pro.sky.telegrambot.repository.UserRepository;
+import pro.sky.telegrambot.repository.VolunteerRepository;
 import pro.sky.telegrambot.service.UserService;
 
 import javax.annotation.PostConstruct;
@@ -32,6 +35,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private final UserRepository userRepository;
+    @Autowired
+    private final VolunteerRepository volunteerRepository;
+
+    public TelegramBotUpdatesListener(UserRepository userRepository, VolunteerRepository volunteerRepository) {
+        this.userRepository = userRepository;
+        this.volunteerRepository = volunteerRepository;
+    }
 
     @PostConstruct
     public void init() {
@@ -272,4 +284,20 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         userService.editUser(user);
         sendMessage(update, "Укажите номер вашего телефона");
     }
+
+    /**
+     * Метод, который сохраняет последнюю команду пользователя
+     * @param lastCommand
+     * @param chatId
+     */
+    private String saveUser(Long chatId, String lastCommand) {
+        User user = UserRepository.findByChatId(chatId);
+        if (user == null) {
+            user = new User(chatId, lastCommand);
+            userRepository.save(user);
+        }
+        return lastCommand;
+    }
+
+
 }

@@ -22,6 +22,17 @@ public class Report {
     private String wellBeingAndAddiction;
     private String changeInBehavior;
 
+    @ManyToOne
+    @JoinColumn(name = "users_chat_id")
+    private User user;
+    @ManyToOne
+    @JoinColumn(name = "volunteers_chat_id")
+    private Volunteer volunteer;
+
+
+    public Report() {
+
+    }
 
     public Long getId() {
         return id;
@@ -87,5 +98,13 @@ public class Report {
                 ", wellBeingAndAddiction='" + wellBeingAndAddiction + '\'' +
                 ", changeInBehavior='" + changeInBehavior + '\'' +
                 '}';
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Volunteer getVolunteer() {
+        return volunteer;
     }
 }

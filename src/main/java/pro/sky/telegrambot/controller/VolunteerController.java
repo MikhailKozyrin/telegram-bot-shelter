@@ -47,7 +47,7 @@ public class VolunteerController {
             },
             tags = "Работа с волонтерами"
     )
-    @GetMapping("{id}")
+    @GetMapping("{chat_id}")
     public Volunteer getVolunteer(@Parameter(description = "chat_id", example = "1") @PathVariable Long chatId) {
         return volunteerService.findVolunteer(chatId);
     }

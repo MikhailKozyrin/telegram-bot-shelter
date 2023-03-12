@@ -13,23 +13,15 @@ import java.util.Objects;
 public class Volunteer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     private Long chatId;
     private String name;
     private String lastCommand;
 
+    @OneToMany(mappedBy = "volunteer")
+    public Collection<Report> report;
 
     public Volunteer() {
 
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getChatId() {
@@ -62,18 +54,17 @@ public class Volunteer {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Volunteer volunteer = (Volunteer) o;
-        return Objects.equals(id, volunteer.id) && Objects.equals(chatId, volunteer.chatId) && Objects.equals(name, volunteer.name) && Objects.equals(lastCommand, volunteer.lastCommand);
+        return Objects.equals(chatId, volunteer.chatId) && Objects.equals(name, volunteer.name) && Objects.equals(lastCommand, volunteer.lastCommand) && Objects.equals(report, volunteer.report);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, chatId, name, lastCommand);
+        return Objects.hash(chatId, name, lastCommand, report);
     }
 
     @Override
     public String toString() {
         return "Volunteer{" +
-                "id=" + id +
                 ", chatId=" + chatId +
                 ", name='" + name + '\'' +
                 ", lastCommand='" + lastCommand + '\'' +

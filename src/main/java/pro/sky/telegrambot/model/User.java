@@ -2,9 +2,11 @@ package pro.sky.telegrambot.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.util.Collection;
 
 /**
- * Модель для работы с пользователи и волонтерами
+ * Модель для работы с пользователями и волонтерами
  */
 @Entity(name = "users")
 public class User {
@@ -15,6 +17,9 @@ public class User {
     private String mobileNumber;
     private String lastCommand;
     private boolean volunteerTrigger;
+
+    @OneToMany(mappedBy = "user")
+    public Collection<Report> report;
 
     public User() {
     }
@@ -62,5 +67,9 @@ public class User {
 
     public Long getChatId() {
         return chatId;
+    }
+
+    public Collection<Report> getReport() {
+        return report;
     }
 }
