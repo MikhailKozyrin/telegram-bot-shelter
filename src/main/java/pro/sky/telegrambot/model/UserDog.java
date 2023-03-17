@@ -4,10 +4,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 /**
- * Модель для работы с пользователи и волонтерами
+ * Модель для работы с пользователями приюта собак
  */
-@Entity(name = "users")
-public class User {
+@Entity(name = "users_for_dog")
+public class UserDog {
 
     @Id
     private Long chatId;
@@ -16,10 +16,10 @@ public class User {
     private String lastCommand;
     private boolean volunteerTrigger;
 
-    public User() {
+    public UserDog() {
     }
 
-    public User(Long chatId, String userName) {
+    public UserDog(Long chatId, String userName) {
         this.chatId = chatId;
         this.userName = userName;
         this.volunteerTrigger = false;

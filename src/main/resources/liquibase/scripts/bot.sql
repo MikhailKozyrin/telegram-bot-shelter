@@ -44,5 +44,34 @@ CREATE TABLE users
     volunteer_trigger BOOLEAN
 );
 
+-- changeset AlexSnegireff:7
+drop table client_registration;
+DROP table report;
+drop table volunteers;
+
+-- changeset AlexSnegireff:8
+drop table users;
+CREATE TABLE users_for_dog
+(
+    chat_id BIGINT PRIMARY KEY ,
+    user_name TEXT,
+    mobile_number TEXT,
+    last_command TEXT,
+    volunteer_trigger BOOLEAN
+);
+
+-- changeset AlexSnegireff:9
+CREATE TABLE users_for_cat
+(
+    chat_id BIGINT PRIMARY KEY ,
+    user_name TEXT,
+    mobile_number TEXT,
+    last_command TEXT,
+    volunteer_trigger BOOLEAN
+);
+
+
+
+
 
 
