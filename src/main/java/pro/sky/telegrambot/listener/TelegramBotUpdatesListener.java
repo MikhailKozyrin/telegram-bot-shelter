@@ -2,21 +2,28 @@ package pro.sky.telegrambot.listener;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.File;
+import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.Keyboard;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.response.GetFileResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.UserCat;
 import pro.sky.telegrambot.model.UserDog;
+import pro.sky.telegrambot.service.ReportService;
 import pro.sky.telegrambot.service.UserCatService;
 import pro.sky.telegrambot.service.UserDogService;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.List;
 
 import static pro.sky.telegrambot.constants.Constants.*;
@@ -37,6 +44,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     @Autowired
     private UserCatService userCatService;
+
+    @Autowired
+    private ReportService reportService;
 
     @PostConstruct
     public void init() {
@@ -90,7 +100,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Используется для определения типа пользователя
-     *
      * @param user пользователь
      * @return true - собака, false - кот
      */
@@ -100,7 +109,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод вовращается объект пользователя
-     *
      * @return пользователь
      */
     private Object getUser(Update update) {
@@ -377,10 +385,97 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param update
      */
     private void commandProcessing(String lastCommand, Update update, Object user) {
-        if ("Ожидается username".equals(lastCommand)) {
+        if (EXPECTED_USERNAME.equals(lastCommand)) {
             usernameEntry(update, user);
-        } else if (lastCommand.equals("Ожидается номер телефона")) {
+        } else if (EXPECTED_PHONE_NUMBER.equals(lastCommand)) {
             phoneNumberEntry(update, user);
+        } else if (EXPECTED_PHOTO.equals(lastCommand)){
+            photoRecord(update, user);
+        } else if (EXPECTED_RATION.equals(lastCommand)) {
+            dietRecord(update, user);
+        } else if (EXPECTED_WELL_BEING.equals(lastCommand)) {
+            wellBeingRecord(update, user);
+        } else if (EXPECTED_CHANGE_IN_BEHAVIOR.equals(lastCommand)) {
+            changeInBehaviorRecord(update,user);
+
+        }
+    }
+
+    /**
+     * Метод, который вызывается для записи изменений в поведении в отчет
+     * @param user пользователь
+     */
+    private void changeInBehaviorRecord(Update update, Object user) {
+        Report report = reportService.findReportByUserIdAndStatus(getChatId(update),EXPECTED_CHANGE_IN_BEHAVIOR);
+        report.setChangeInBehavior(getIncomingMessage(update));
+        setStatus(report, null);
+        reportService.editReport(report);
+        setLastCommand(user, null);
+        sendMessage(update, "Переводим вас в главное меню");
+        mainMenu(update);
+    }
+
+    /**
+     * Метод, который вызывается для записи общего самочувствия в отчет
+     * @param update
+     * @param user пользователь
+     */
+    private void wellBeingRecord(Update update, Object user) {
+        Report report = reportService.findReportByUserIdAndStatus(getChatId(update),EXPECTED_WELL_BEING);
+        report.setWellBeingAndAddiction(getIncomingMessage(update));
+        setStatus(report, EXPECTED_CHANGE_IN_BEHAVIOR);
+        reportService.editReport(report);
+        setLastCommand(user, EXPECTED_CHANGE_IN_BEHAVIOR);
+        sendMessage(update, EXPECTED_CHANGE_IN_BEHAVIOR);
+    }
+
+    /**
+     * Метод, который вызывается для записи рациона в отчет
+     * @param user пользователь
+     */
+    private void dietRecord(Update update, Object user) {
+        Report report = reportService.findReportByUserIdAndStatus(getChatId(update),EXPECTED_RATION);
+        report.setDiet(getIncomingMessage(update));
+        setStatus(report, EXPECTED_WELL_BEING);
+        reportService.editReport(report);
+        setLastCommand(user, EXPECTED_WELL_BEING);
+        sendMessage(update, EXPECTED_WELL_BEING);
+    }
+
+    /**
+     * Метод, который вызывается для записи фото в отчет
+     */
+    private void photoRecord(Update update, Object user) {
+        PhotoSize photoSize = update.message().photo()[3];
+        if (photoSize != null){
+            GetFile getFile = new GetFile(photoSize.fileId());
+            GetFileResponse getFileResponse = telegramBot.execute(getFile);
+            if (getFileResponse.isOk()){
+                File file = getFileResponse.file();
+                try {
+                    byte[] image = telegramBot.getFileContent(file);
+                    Report report = new Report();
+                    report.setPicture(image);
+                    report.setUserId(getChatId(update));
+                    setStatus(report, EXPECTED_RATION);
+                    reportService.createReport(report);
+                    setLastCommand(user, EXPECTED_RATION);
+                    sendMessage(update, EXPECTED_RATION);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Метод для установки статуса в отчет
+     * @param report отчет
+     * @param status статус
+     */
+    private void setStatus(Report report, String status){
+        if (report != null){
+            report.setStatus(status);
         }
     }
 
@@ -399,7 +494,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             userCat.setMobileNumber(getIncomingMessage(update));
             setLastCommand(userCat, null);
         }
-
         sendMessage(update, "Благодарю");
         sendMessage(update, "Переводим вас в главное меню");
         mainMenu(update);

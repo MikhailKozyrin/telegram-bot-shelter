@@ -41,6 +41,13 @@ public class Constants {
     public final static String FOR_AN_ADULT_DOG = "Рекомендации по обустройству дома для взрослого питомца";
     public final static String FOR_A_SICK_DOG = "Рекомендаций по обустройству дома для питомца с ограниченными возможностями (зрение, передвижение)";
 
+    // Команды и статусы
+    public final static String EXPECTED_PHOTO = "Ожидается фото";
+    public final static String EXPECTED_PHONE_NUMBER = "Ожидается номер телефона";
+    public final static String EXPECTED_USERNAME = "Ожидается username";
+    public final static String EXPECTED_RATION = "Ожидается рацион животного";
+    public final static String EXPECTED_WELL_BEING = "Ожидается общее самочувствие и привыкание к новому месту";
+    public final static String EXPECTED_CHANGE_IN_BEHAVIOR = "Ожидаются изменения в поведении: отказ от старых привычек, приобретение новых.";
 
     // Information messages
     public final static String WELCOME_TEXT = "Приветствуем Вас! Этот бот поможет Вам выбрать собаку из приюта. " +

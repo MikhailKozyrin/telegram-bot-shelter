@@ -1,11 +1,13 @@
 package pro.sky.telegrambot.model;
 
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.util.Arrays;
 import java.util.Objects;
 
+@Entity(name = "reports")
 public class Report {
 
     /**
@@ -19,12 +21,43 @@ public class Report {
     private String diet;
     private String wellBeingAndAddiction;
     private String changeInBehavior;
+    private Long userId;
+    private Long volunteerId;
+    private String status;
 
-    public Report(byte[] picture, String diet, String wellBeingAndAddiction, String changeInBehavior) {
-        this.picture = picture;
-        this.diet = diet;
-        this.wellBeingAndAddiction = wellBeingAndAddiction;
-        this.changeInBehavior = changeInBehavior;
+    public Report(){
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getVolunteerId() {
+        return volunteerId;
+    }
+
+    public void setVolunteerId(Long volunteerId) {
+        this.volunteerId = volunteerId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public byte[] getPicture() {
@@ -76,11 +109,16 @@ public class Report {
 
     @Override
     public String toString() {
-        return "Report{" +
-                "picture=" + Arrays.toString(picture) +
-                ", diet='" + diet + '\'' +
-                ", wellBeingAndAddiction='" + wellBeingAndAddiction + '\'' +
-                ", changeInBehavior='" + changeInBehavior + '\'' +
-                '}';
+        return "Отчет\n" +
+                "Номер отчета: " + id +
+                "\nID пользователя: " + userId +
+                "\nID ответственного волонтера: " + volunteerId +
+                "\nСтатус: " + status +
+                "\nРацион питомца:\n" +
+                diet +
+                "\nОбщее самочувствие и привыкание к новому месту:\n" +
+                wellBeingAndAddiction +
+                "\nИзменения в поведении\n" +
+                changeInBehavior;
     }
 }
