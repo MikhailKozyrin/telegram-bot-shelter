@@ -63,4 +63,13 @@ public class UserCat {
     public Long getChatId() {
         return chatId;
     }
+
+    @Override
+    public String toString() {
+        return "Кошачий приют" +
+                "\nId=" + chatId +
+                "\nuserName='" + userName +
+                "\nmobileNumber='" + mobileNumber + '\'' +
+                "\nВозможность отправки отчетов=" + volunteerTrigger;
+    }
 }

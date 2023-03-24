@@ -87,6 +87,15 @@ CREATE TABLE reports
 ALTER TABLE reports
    RENAME COLUMN changeInBehavior to change_in_behavior;
 
+--changeset AlexSnegireff:12
+CREATE TABLE volunteers
+(
+    chat_id BIGINT PRIMARY KEY ,
+    user_name TEXT,
+    chat_id_user BIGINT,
+    status TEXT
+)
+
 
 
 

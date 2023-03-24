@@ -13,14 +13,16 @@ import com.pengrad.telegrambot.response.GetFileResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.UserCat;
 import pro.sky.telegrambot.model.UserDog;
+import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.service.ReportService;
 import pro.sky.telegrambot.service.UserCatService;
 import pro.sky.telegrambot.service.UserDogService;
+import pro.sky.telegrambot.service.VolunteerService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -36,17 +38,26 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
-    @Autowired
-    private TelegramBot telegramBot;
+    @Value("${volunteer.password}")
+    private String password;
 
-    @Autowired
-    private UserDogService userDogService;
+    private final TelegramBot telegramBot;
 
-    @Autowired
-    private UserCatService userCatService;
+    private final UserDogService userDogService;
 
-    @Autowired
-    private ReportService reportService;
+    private final UserCatService userCatService;
+
+    private final ReportService reportService;
+
+    private final VolunteerService volunteerService;
+
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, UserDogService userDogService, UserCatService userCatService, ReportService reportService, VolunteerService volunteerService) {
+        this.telegramBot = telegramBot;
+        this.userDogService = userDogService;
+        this.userCatService = userCatService;
+        this.reportService = reportService;
+        this.volunteerService = volunteerService;
+    }
 
     @PostConstruct
     public void init() {
@@ -63,16 +74,25 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
-            newUserCheck(update);
-            Object user = getUser(update);
-            String lastCommand = null;
-            if (user != null) {
-                lastCommand = getLastCommand(user);
+            if (password.equals(getIncomingMessage(update))) {
+                saveVolunteer(update);
             }
-            if (lastCommand == null) {
-                processingReceivedMessage(update, user);
+            Volunteer volunteer = volunteerService.findVolunteer(getChatId(update));
+            if (volunteer == null) {
+                newUserCheck(update);
+                Object user = getUser(update);
+                String lastCommand = null;
+                if (user != null) {
+                    lastCommand = getLastCommand(user);
+                }
+                if (lastCommand == null) {
+                    processingReceivedMessage(update, user);
+                } else {
+                    commandProcessing(lastCommand, update, user);
+                }
             } else {
-                commandProcessing(lastCommand, update, user);
+                processingReceivedMessageFromVolunteer(update, volunteer);
+
             }
             logger.info("Processing update: {}", update);
 
@@ -81,8 +101,68 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Метод для получения последней команды
+     * Обработка сообщений от волонтера
+     */
+    private void processingReceivedMessageFromVolunteer(Update update, Volunteer volunteer) {
+        if (volunteer.getChatIdUser() == null) {
+            if (READY_TO_WORK.equals(getIncomingMessage(update))) {
+                readyForWork(update, volunteer);
+            } else if (FINISH_WORK.equals(getIncomingMessage(update))) {
+                endOfVolunteerWork(update, volunteer);
+                readinessForWork(update);
+
+            }
+        } else {
+            SendMessage sendMessage = new SendMessage(volunteer.getChatIdUser(), getIncomingMessage(update));
+            telegramBot.execute(sendMessage);
+        }
+    }
+
+    /**
+     * Вызывается, если волонтер завершил работу
      *
+     * @param volunteer волонтер
+     */
+    private void endOfVolunteerWork(Update update, Volunteer volunteer) {
+        volunteer.setStatus(null);
+        volunteerService.editVolunteer(volunteer);
+        sendMessage(update, "Вам присвоен неактивный статус");
+    }
+
+    /**
+     * Вызывается, если волонтер готов к работе
+     *
+     * @param volunteer волонтер
+     */
+    private void readyForWork(Update update, Volunteer volunteer) {
+        volunteer.setStatus(READY_TO_WORK);
+        volunteerService.editVolunteer(volunteer);
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                new String[]{CHECK_REPORTS},
+                new String[]{FINISH_WORK}
+        );
+        sendMessage(update, "Будьте готовы ответить клиенту или проверьте отчеты", replyKeyboardMarkup);
+    }
+
+    /**
+     * Метод спрашивает волонтера, готов ли он к работе?
+     */
+    private void readinessForWork(Update update) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                READY_TO_WORK);
+        sendMessage(update, "Готовы к работе?", replyKeyboardMarkup);
+    }
+
+    /**
+     * Метод, который вызывается при получении пароля волонтеров
+     */
+    private void saveVolunteer(Update update) {
+        volunteerService.createVolunteer(new Volunteer(getChatId(update), update.message().chat().username()));
+        readinessForWork(update);
+    }
+
+    /**
+     * Метод для получения последней команды
      * @param user пользователь
      * @return последняя команда пользователя
      */
@@ -120,7 +200,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * С помощью этого метода идет обработка команды /start и выюор приюта
+     * С помощью этого метода идет обработка команды /start и выбор приюта
      */
     private void newUserCheck(Update update) {
         if ("/start".equals(getIncomingMessage(update))) {
@@ -195,6 +275,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             recordingContactInformation(update, user);
         } else if (SEND_A_REPORT.equals(getIncomingMessage(update))) {
             reportRecord(update, user);
+        } else if (CALL_VOLUNTEER.equals(getIncomingMessage(update))) {
+            contactWithAVolunteer(update, user);
 
         }
     }
@@ -224,7 +306,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод для установки последней команды
-     * @param user объект пользователя
+     *
+     * @param user        объект пользователя
      * @param lastCommand последняя команда, которую установит метод
      */
     private void setLastCommand(Object user, String lastCommand) {
@@ -252,6 +335,30 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
         sendMessage(update, WELCOME_TEXT, replyKeyboardMarkup);
+    }
+
+    private void contactWithAVolunteer(Update update, Object user){
+        List<Long> volunteers = volunteerService.getChatIdWhereStatusIsExpectation();
+        if (volunteers.size() == 0){
+            sendMessage(update, "На данный момент нет свободных волонтеров");
+        } else {
+            sendMessage(update, "Нажмите кнопку для прекращения переписки", new ReplyKeyboardMarkup("/stop"));
+            SendMessage sendMessage1 = new SendMessage(volunteers.get(0), "Инициирована переписка\nНиже представлена информация об пользователе");
+            telegramBot.execute(sendMessage1);
+            SendMessage sendMessage2 = new SendMessage(volunteers.get(0), user.toString());
+            telegramBot.execute(sendMessage2);
+            SendMessage sendMessage3 = new SendMessage(
+                    volunteers.get(0),
+                    "Нажмите кнопку для прекращения переписки"
+            ).replyMarkup(new ReplyKeyboardMarkup("/stop"));
+            telegramBot.execute(sendMessage3);
+            Volunteer volunteer = volunteerService.findVolunteer(volunteers.get(0));
+            volunteer.setChatIdUser(getChatId(update));
+            volunteer.setStatus(CORRESPONDING);
+            volunteerService.editVolunteer(volunteer);
+            setLastCommand(user, String.valueOf(volunteer.getChatId()));
+        }
+
     }
 
     /**
@@ -381,47 +488,55 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, который используется для обработки команд, подразумевающих работу с БД
      *
-     * @param lastCommand
-     * @param update
+     * @param lastCommand последняя команда
      */
     private void commandProcessing(String lastCommand, Update update, Object user) {
         if (EXPECTED_USERNAME.equals(lastCommand)) {
             usernameEntry(update, user);
         } else if (EXPECTED_PHONE_NUMBER.equals(lastCommand)) {
             phoneNumberEntry(update, user);
-        } else if (EXPECTED_PHOTO.equals(lastCommand)){
+        } else if (EXPECTED_PHOTO.equals(lastCommand)) {
             photoRecord(update, user);
         } else if (EXPECTED_RATION.equals(lastCommand)) {
             dietRecord(update, user);
         } else if (EXPECTED_WELL_BEING.equals(lastCommand)) {
             wellBeingRecord(update, user);
         } else if (EXPECTED_CHANGE_IN_BEHAVIOR.equals(lastCommand)) {
-            changeInBehaviorRecord(update,user);
-
+            changeInBehaviorRecord(update, user);
+        } else {
+            SendMessage sendMessage = new SendMessage(lastCommand, getIncomingMessage(update));
+            telegramBot.execute(sendMessage);
         }
     }
 
     /**
      * Метод, который вызывается для записи изменений в поведении в отчет
+     *
      * @param user пользователь
      */
     private void changeInBehaviorRecord(Update update, Object user) {
-        Report report = reportService.findReportByUserIdAndStatus(getChatId(update),EXPECTED_CHANGE_IN_BEHAVIOR);
+        Report report = reportService.findReportByUserIdAndStatus(getChatId(update), EXPECTED_CHANGE_IN_BEHAVIOR);
         report.setChangeInBehavior(getIncomingMessage(update));
         setStatus(report, null);
         reportService.editReport(report);
         setLastCommand(user, null);
+        List<Long> volunteers = volunteerService.getChatIdWhereStatusIsExpectation();
+        volunteers.forEach(chatId -> {
+                    SendMessage sendMessage = new SendMessage(chatId, "Доступен отчет");
+                    telegramBot.execute(sendMessage);
+                }
+        );
         sendMessage(update, "Переводим вас в главное меню");
         mainMenu(update);
     }
 
     /**
      * Метод, который вызывается для записи общего самочувствия в отчет
-     * @param update
+     *
      * @param user пользователь
      */
     private void wellBeingRecord(Update update, Object user) {
-        Report report = reportService.findReportByUserIdAndStatus(getChatId(update),EXPECTED_WELL_BEING);
+        Report report = reportService.findReportByUserIdAndStatus(getChatId(update), EXPECTED_WELL_BEING);
         report.setWellBeingAndAddiction(getIncomingMessage(update));
         setStatus(report, EXPECTED_CHANGE_IN_BEHAVIOR);
         reportService.editReport(report);
@@ -431,10 +546,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод, который вызывается для записи рациона в отчет
+     *
      * @param user пользователь
      */
     private void dietRecord(Update update, Object user) {
-        Report report = reportService.findReportByUserIdAndStatus(getChatId(update),EXPECTED_RATION);
+        Report report = reportService.findReportByUserIdAndStatus(getChatId(update), EXPECTED_RATION);
         report.setDiet(getIncomingMessage(update));
         setStatus(report, EXPECTED_WELL_BEING);
         reportService.editReport(report);
@@ -447,10 +563,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private void photoRecord(Update update, Object user) {
         PhotoSize photoSize = update.message().photo()[3];
-        if (photoSize != null){
+        if (photoSize != null) {
             GetFile getFile = new GetFile(photoSize.fileId());
             GetFileResponse getFileResponse = telegramBot.execute(getFile);
-            if (getFileResponse.isOk()){
+            if (getFileResponse.isOk()) {
                 File file = getFileResponse.file();
                 try {
                     byte[] image = telegramBot.getFileContent(file);
@@ -470,11 +586,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод для установки статуса в отчет
+     *
      * @param report отчет
      * @param status статус
      */
-    private void setStatus(Report report, String status){
-        if (report != null){
+    private void setStatus(Report report, String status) {
+        if (report != null) {
             report.setStatus(status);
         }
     }
@@ -482,7 +599,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, который используется для записи в БД номера телефона пользователя
      *
-     * @param update
+     * @param user пользователь
      */
     private void phoneNumberEntry(Update update, Object user) {
         if (userTypeDefinition(user)) {
@@ -534,7 +651,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } else {
             UserCat userCat = findUserCatOrCreate(update);
             userCat.setUserName(getIncomingMessage(update));
-            setLastCommand(userCat,"Ожидается номер телефона");
+            setLastCommand(userCat, "Ожидается номер телефона");
         }
         sendMessage(update, "Укажите номер вашего телефона");
     }

@@ -2,6 +2,13 @@ package pro.sky.telegrambot.constants;
 
 public class Constants {
 
+    // Кнопки для волонтера
+    public final static String READY_TO_WORK = "Готов к работе";
+    public final static String DO_NOT_READY_TO_WORK = "Не готов к работе";
+    public final static String CHECK_REPORTS = "Просмотр отчетов";
+    public final static String FINISH_WORK = "Завершить работу";
+    public final static String CORRESPONDING = "Ведет переписку";
+
     // Кнопки для главного меню
     public final static String TAKE_ON_THE_ANIMAL = "Как взять животное из приюта";
     public final static String SEND_A_REPORT = "Прислать отчет о питомце";
