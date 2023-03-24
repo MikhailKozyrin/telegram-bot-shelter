@@ -1,19 +1,19 @@
 package pro.sky.telegrambot.model;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.util.Arrays;
 import java.util.Objects;
 
-/**
- * <b>Модель направления отчета по животному</b><br>
- * Отчет должен содержать: фото животного, рацион, общее самочувствие и привыкание к новому месту,
- * изменение в поведении
- */
-
-@Entity(name = "report")
+@Entity(name = "reports")
 public class Report {
 
-
+    /**
+     * <b>Модель направления отчета по животному</b><br>
+     * Отчет должен содержать: фото животного, рацион, общее самочувствие и привыкание к новому месту, изменение в поведении
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,17 +21,11 @@ public class Report {
     private String diet;
     private String wellBeingAndAddiction;
     private String changeInBehavior;
+    private Long userId;
+    private Long volunteerId;
+    private String status;
 
-    @ManyToOne
-    @JoinColumn(name = "users_chat_id")
-    private User user;
-    @ManyToOne
-    @JoinColumn(name = "volunteers_chat_id")
-    private Volunteer volunteer;
-
-
-    public Report() {
-
+    public Report(){
     }
 
     public Long getId() {
@@ -40,6 +34,30 @@ public class Report {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getVolunteerId() {
+        return volunteerId;
+    }
+
+    public void setVolunteerId(Long volunteerId) {
+        this.volunteerId = volunteerId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public byte[] getPicture() {
@@ -79,32 +97,28 @@ public class Report {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Report report = (Report) o;
-        return Objects.equals(id, report.id) && Arrays.equals(picture, report.picture) && Objects.equals(diet, report.diet) && Objects.equals(wellBeingAndAddiction, report.wellBeingAndAddiction) && Objects.equals(changeInBehavior, report.changeInBehavior);
+        return Arrays.equals(picture, report.picture) && Objects.equals(diet, report.diet) && Objects.equals(wellBeingAndAddiction, report.wellBeingAndAddiction) && Objects.equals(changeInBehavior, report.changeInBehavior);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(id, diet, wellBeingAndAddiction, changeInBehavior);
+        int result = Objects.hash(diet, wellBeingAndAddiction, changeInBehavior);
         result = 31 * result + Arrays.hashCode(picture);
         return result;
     }
 
     @Override
     public String toString() {
-        return "Report{" +
-                "id=" + id +
-                ", picture=" + Arrays.toString(picture) +
-                ", diet='" + diet + '\'' +
-                ", wellBeingAndAddiction='" + wellBeingAndAddiction + '\'' +
-                ", changeInBehavior='" + changeInBehavior + '\'' +
-                '}';
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Volunteer getVolunteer() {
-        return volunteer;
+        return "Отчет\n" +
+                "Номер отчета: " + id +
+                "\nID пользователя: " + userId +
+                "\nID ответственного волонтера: " + volunteerId +
+                "\nСтатус: " + status +
+                "\nРацион питомца:\n" +
+                diet +
+                "\nОбщее самочувствие и привыкание к новому месту:\n" +
+                wellBeingAndAddiction +
+                "\nИзменения в поведении\n" +
+                changeInBehavior;
     }
 }

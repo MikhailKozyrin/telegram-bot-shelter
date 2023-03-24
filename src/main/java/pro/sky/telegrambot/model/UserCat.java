@@ -2,14 +2,12 @@ package pro.sky.telegrambot.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import java.util.Collection;
 
 /**
- * Модель для работы с пользователями и волонтерами
+ * Модель для работы с пользователями приюта котов
  */
-@Entity(name = "users")
-public class User {
+@Entity(name = "users_for_cat")
+public class UserCat {
 
     @Id
     private Long chatId;
@@ -18,13 +16,10 @@ public class User {
     private String lastCommand;
     private boolean volunteerTrigger;
 
-    @OneToMany(mappedBy = "user")
-    public Collection<Report> report;
-
-    public User() {
+    public UserCat() {
     }
 
-    public User(Long chatId, String userName) {
+    public UserCat(Long chatId, String userName) {
         this.chatId = chatId;
         this.userName = userName;
         this.volunteerTrigger = false;
@@ -69,7 +64,12 @@ public class User {
         return chatId;
     }
 
-    public Collection<Report> getReport() {
-        return report;
+    @Override
+    public String toString() {
+        return "Кошачий приют" +
+                "\nId=" + chatId +
+                "\nuserName='" + userName +
+                "\nmobileNumber='" + mobileNumber + '\'' +
+                "\nВозможность отправки отчетов=" + volunteerTrigger;
     }
 }
