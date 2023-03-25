@@ -80,7 +80,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             Volunteer volunteer = volunteerService.findVolunteer(getChatId(update));
             if (volunteer == null) {
                 newUserCheck(update);
-                Object user = getUser(update);
+                Object user = getUser(getChatId(update));
                 String lastCommand = null;
                 if (user != null) {
                     lastCommand = getLastCommand(user);
@@ -104,44 +104,79 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Обработка сообщений от волонтера
      */
     private void processingReceivedMessageFromVolunteer(Update update, Volunteer volunteer) {
+        if ("/stop".equals(getIncomingMessage(update))){
+            answerToStopFromVolunteer(getChatId(update), volunteer);
+        }
         if (volunteer.getChatIdUser() == null) {
             if (READY_TO_WORK.equals(getIncomingMessage(update))) {
-                readyForWork(update, volunteer);
+                readyForWork(getChatId(update), volunteer);
             } else if (FINISH_WORK.equals(getIncomingMessage(update))) {
                 endOfVolunteerWork(update, volunteer);
                 readinessForWork(update);
+            } else if (CHECK_REPORTS.equals(getIncomingMessage(update))) {
+                checkReports(update,volunteer);
 
             }
         } else {
-            SendMessage sendMessage = new SendMessage(volunteer.getChatIdUser(), getIncomingMessage(update));
-            telegramBot.execute(sendMessage);
+            sendMessage(volunteer.getChatIdUser(), getIncomingMessage(update));
         }
     }
 
     /**
+     * Вызывается, если волонтер нажал кнопку стоп
+     * @param chatId id чата волонтера
+     * @param volunteer волонтер
+     */
+    private void answerToStopFromVolunteer(Long chatId, Volunteer volunteer){
+        if (volunteer.getChatIdUser() != null){
+            sendMessage(volunteer.getChatIdUser(), "Чат завершен");
+            mainMenu(volunteer.getChatIdUser());
+            setLastCommand(getUser(volunteer.getChatIdUser()), null);
+            volunteer.setChatIdUser(null);
+            readyForWork(chatId, volunteer);
+        }
+    }
+
+    /**
+     * Вызывается, если волонтер желает проверить отчеты
+     * @param update
+     * @param volunteer
+     */
+    private void checkReports(Update update, Volunteer volunteer){
+        List<Long> reportsId = reportService.findIdOfReports();
+        if (reportsId.size() == 0){
+            sendMessage(getChatId(update), "Нет доступных для проверки отчетов");
+        } else {
+            sendMessage(getChatId(update), "Найден отчет");
+            sendMessage(getChatId(update), reportService.findReport(reportsId.get(0)).toString());
+        }
+
+
+    }
+
+    /**
      * Вызывается, если волонтер завершил работу
-     *
      * @param volunteer волонтер
      */
     private void endOfVolunteerWork(Update update, Volunteer volunteer) {
         volunteer.setStatus(null);
         volunteerService.editVolunteer(volunteer);
-        sendMessage(update, "Вам присвоен неактивный статус");
+        sendMessage(getChatId(update), "Вам присвоен неактивный статус");
     }
 
     /**
      * Вызывается, если волонтер готов к работе
-     *
+     * @param chatId id чата, куда надо отправить
      * @param volunteer волонтер
      */
-    private void readyForWork(Update update, Volunteer volunteer) {
+    private void readyForWork(Long chatId, Volunteer volunteer) {
         volunteer.setStatus(READY_TO_WORK);
         volunteerService.editVolunteer(volunteer);
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                 new String[]{CHECK_REPORTS},
                 new String[]{FINISH_WORK}
         );
-        sendMessage(update, "Будьте готовы ответить клиенту или проверьте отчеты", replyKeyboardMarkup);
+        sendMessage(chatId, "Будьте готовы ответить клиенту или проверьте отчеты", replyKeyboardMarkup);
     }
 
     /**
@@ -150,7 +185,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void readinessForWork(Update update) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                 READY_TO_WORK);
-        sendMessage(update, "Готовы к работе?", replyKeyboardMarkup);
+        sendMessage(getChatId(update), "Готовы к работе?", replyKeyboardMarkup);
     }
 
     /**
@@ -191,10 +226,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Метод вовращается объект пользователя
      * @return пользователь
      */
-    private Object getUser(Update update) {
-        Object user = userDogService.findUser(getChatId(update));
+    private Object getUser(Long chatId) {
+        Object user = userDogService.findUser(chatId);
         if (user == null) {
-            user = userCatService.findUser(getChatId(update));
+            user = userCatService.findUser(chatId);
         }
         return user;
     }
@@ -207,10 +242,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             choiceOfShelter(update);
         } else if (DOG_SHELTER.equals(getIncomingMessage(update))) {
             findUserDogOrCreate(update);
-            mainMenu(update);
+            mainMenu(getChatId(update));
         } else if (CAT_SHELTER.equals(getIncomingMessage(update))) {
             findUserCatOrCreate(update);
-            mainMenu(update);
+            mainMenu(getChatId(update));
         }
     }
 
@@ -223,7 +258,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
-        sendMessage(update, CHOICE_OF_SHELTER, replyKeyboardMarkup);
+        sendMessage(getChatId(update), CHOICE_OF_SHELTER, replyKeyboardMarkup);
 
 
     }
@@ -264,7 +299,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private void processingReceivedMessage(Update update, Object user) {
         if ("/menu".equals(getIncomingMessage(update))) {
-            mainMenu(update);
+            mainMenu(getChatId(update));
         } else if (INFORMATION_ABOUT_SHELTER.equals(getIncomingMessage(update))) {
             newUserConsultation(update);
         } else if (TAKE_ON_THE_ANIMAL.equals(getIncomingMessage(update))) {
@@ -289,17 +324,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             UserDog userDog = (UserDog) user;
             if (userDog.isVolunteerTrigger()) {
                 setLastCommand(userDog, "Ожидается фото");
-                sendMessage(update, "Отправьте фото питомца");
+                sendMessage(getChatId(update), "Отправьте фото питомца");
             } else {
-                sendMessage(update, "Отправка отчета недоступна, свяжитесь с волонтером");
+                sendMessage(getChatId(update), "Отправка отчета недоступна, свяжитесь с волонтером");
             }
         } else {
             UserCat userCat = (UserCat) user;
             if (userCat.isVolunteerTrigger()) {
                 setLastCommand(userCat, "Ожидается фото");
-                sendMessage(update, "Отправьте фото питомца");
+                sendMessage(getChatId(update), "Отправьте фото питомца");
             } else {
-                sendMessage(update, "Отправка отчета недоступна, свяжитесь с волонтером");
+                sendMessage(getChatId(update), "Отправка отчета недоступна, свяжитесь с волонтером");
             }
         }
     }
@@ -325,24 +360,26 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * <b>Метод для ответа на стартовое сообщение</b><br>
      */
-    private void mainMenu(Update update) {
-        Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                new String[]{INFORMATION_ABOUT_SHELTER},
-                new String[]{TAKE_ON_THE_ANIMAL},
-                new String[]{SEND_A_REPORT},
-                new String[]{CALL_VOLUNTEER})
-                .oneTimeKeyboard(true)   // optional
-                .resizeKeyboard(true)    // optional
-                .selective(true);        // optional
-        sendMessage(update, WELCOME_TEXT, replyKeyboardMarkup);
+    private void mainMenu(Long chatId) {
+        if (chatId != null) {
+            Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                    new String[]{INFORMATION_ABOUT_SHELTER},
+                    new String[]{TAKE_ON_THE_ANIMAL},
+                    new String[]{SEND_A_REPORT},
+                    new String[]{CALL_VOLUNTEER})
+                    .oneTimeKeyboard(true)   // optional
+                    .resizeKeyboard(true)    // optional
+                    .selective(true);        // optional
+            sendMessage(chatId, WELCOME_TEXT, replyKeyboardMarkup);
+        }
     }
 
     private void contactWithAVolunteer(Update update, Object user){
         List<Long> volunteers = volunteerService.getChatIdWhereStatusIsExpectation();
         if (volunteers.size() == 0){
-            sendMessage(update, "На данный момент нет свободных волонтеров");
+            sendMessage(getChatId(update), "На данный момент нет свободных волонтеров");
         } else {
-            sendMessage(update, "Нажмите кнопку для прекращения переписки", new ReplyKeyboardMarkup("/stop"));
+            sendMessage(getChatId(update), "Нажмите кнопку для прекращения переписки", new ReplyKeyboardMarkup("/stop"));
             SendMessage sendMessage1 = new SendMessage(volunteers.get(0), "Инициирована переписка\nНиже представлена информация об пользователе");
             telegramBot.execute(sendMessage1);
             SendMessage sendMessage2 = new SendMessage(volunteers.get(0), user.toString());
@@ -364,11 +401,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * <b>Метод для отправки сообщения пользователю</b><br>
      * Указать само сообщение и id чата
-     *
+     * @param chatId id чата
      * @param message должно быть отправлено
      */
-    private void sendMessage(Update update, String message, Keyboard replyKeyboardMarkup) {
-        SendMessage sendMessage = new SendMessage(getChatId(update), message).replyMarkup(replyKeyboardMarkup);
+    private void sendMessage(Long chatId, String message, Keyboard replyKeyboardMarkup) {
+        SendMessage sendMessage = new SendMessage(chatId, message).replyMarkup(replyKeyboardMarkup);
         SendResponse response = telegramBot.execute(sendMessage);
         if (!response.isOk()) {
             logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
@@ -380,16 +417,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, который вызывает при отправке сообщения
      *
-     * @param update  используем, чтобы получить id чата
+     * @param chatId id чата
      * @param message само сообщение
      */
-    private void sendMessage(Update update, String message) {
-        SendMessage sendMessage = new SendMessage(getChatId(update), message);
-        SendResponse response = telegramBot.execute(sendMessage);
-        if (!response.isOk()) {
-            logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
-        } else {
-            logger.info("Сообщение отправлено: " + message);
+    private void sendMessage(Long chatId, String message) {
+        if (chatId != null) {
+            SendMessage sendMessage = new SendMessage(chatId, message);
+            SendResponse response = telegramBot.execute(sendMessage);
+            if (!response.isOk()) {
+                logger.warn("Сообщение не отправлено: {}, error code: {}", message, response.errorCode());
+            } else {
+                logger.info("Сообщение отправлено: " + message);
+            }
         }
     }
 
@@ -414,7 +453,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     new String[]{CALL_VOLUNTEER})
                     .oneTimeKeyboard(false)   // optional
                     .resizeKeyboard(true);    // optional
-            sendMessage(update, message, replyKeyboardMarkup);
+            sendMessage(getChatId(update), message, replyKeyboardMarkup);
         } else {
             replyKeyboardMarkup = new ReplyKeyboardMarkup(
                     new String[]{DATING_RULES},
@@ -427,10 +466,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     .oneTimeKeyboard(true)   // optional
                     .resizeKeyboard(true)    // optional
                     .selective(true);
-            sendMessage(update, message, replyKeyboardMarkup);
+            sendMessage(getChatId(update), message, replyKeyboardMarkup);
 
         }
-        sendMessage(update, message, replyKeyboardMarkup);
+        sendMessage(getChatId(update), message, replyKeyboardMarkup);
     }
 
     /**
@@ -448,7 +487,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
-        sendMessage(update, WELCOME_TEXT_INFORMATION_ABOUT_SHELTER, replyKeyboardMarkup);
+        sendMessage(getChatId(update), WELCOME_TEXT_INFORMATION_ABOUT_SHELTER, replyKeyboardMarkup);
     }
 
     /**
@@ -464,7 +503,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 .oneTimeKeyboard(true)   // optional
                 .resizeKeyboard(true)    // optional
                 .selective(true);        // optional
-        sendMessage(update, HOME_IMPROVEMENT_ANSWER, replyKeyboardMarkup);
+        sendMessage(getChatId(update), HOME_IMPROVEMENT_ANSWER, replyKeyboardMarkup);
     }
 
     /**
@@ -482,7 +521,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             userCat.setLastCommand("Ожидается username");
             userCatService.editUser(userCat);
         }
-        sendMessage(update, "Как к вам обращаться?");
+        sendMessage(getChatId(update), "Как к вам обращаться?");
     }
 
     /**
@@ -503,6 +542,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             wellBeingRecord(update, user);
         } else if (EXPECTED_CHANGE_IN_BEHAVIOR.equals(lastCommand)) {
             changeInBehaviorRecord(update, user);
+        } else if ("/stop".equals(getIncomingMessage(update))) {
+            Volunteer volunteer = volunteerService.findVolunteer(Long.valueOf(getLastCommand(user)));
+            volunteer.setChatIdUser(null);
+            sendMessage(Long.valueOf(getLastCommand(user)), "Чат завершен");
+            readyForWork(Long.valueOf(getLastCommand(user)), volunteer);
+            setLastCommand(user,null);
+            mainMenu(getChatId(update));
         } else {
             SendMessage sendMessage = new SendMessage(lastCommand, getIncomingMessage(update));
             telegramBot.execute(sendMessage);
@@ -526,8 +572,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     telegramBot.execute(sendMessage);
                 }
         );
-        sendMessage(update, "Переводим вас в главное меню");
-        mainMenu(update);
+        sendMessage(getChatId(update), "Переводим вас в главное меню");
+        mainMenu(getChatId(update));
     }
 
     /**
@@ -541,7 +587,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         setStatus(report, EXPECTED_CHANGE_IN_BEHAVIOR);
         reportService.editReport(report);
         setLastCommand(user, EXPECTED_CHANGE_IN_BEHAVIOR);
-        sendMessage(update, EXPECTED_CHANGE_IN_BEHAVIOR);
+        sendMessage(getChatId(update), EXPECTED_CHANGE_IN_BEHAVIOR);
     }
 
     /**
@@ -555,7 +601,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         setStatus(report, EXPECTED_WELL_BEING);
         reportService.editReport(report);
         setLastCommand(user, EXPECTED_WELL_BEING);
-        sendMessage(update, EXPECTED_WELL_BEING);
+        sendMessage(getChatId(update), EXPECTED_WELL_BEING);
     }
 
     /**
@@ -576,7 +622,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     setStatus(report, EXPECTED_RATION);
                     reportService.createReport(report);
                     setLastCommand(user, EXPECTED_RATION);
-                    sendMessage(update, EXPECTED_RATION);
+                    sendMessage(getChatId(update), EXPECTED_RATION);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -611,9 +657,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             userCat.setMobileNumber(getIncomingMessage(update));
             setLastCommand(userCat, null);
         }
-        sendMessage(update, "Благодарю");
-        sendMessage(update, "Переводим вас в главное меню");
-        mainMenu(update);
+        sendMessage(getChatId(update), "Благодарю");
+        sendMessage(getChatId(update), "Переводим вас в главное меню");
+        mainMenu(getChatId(update));
     }
 
     /**
@@ -653,6 +699,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             userCat.setUserName(getIncomingMessage(update));
             setLastCommand(userCat, "Ожидается номер телефона");
         }
-        sendMessage(update, "Укажите номер вашего телефона");
+        sendMessage(getChatId(update), "Укажите номер вашего телефона");
     }
 }
