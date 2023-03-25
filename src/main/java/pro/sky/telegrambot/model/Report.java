@@ -119,6 +119,7 @@ public class Report {
                 "\nОбщее самочувствие и привыкание к новому месту:\n" +
                 wellBeingAndAddiction +
                 "\nИзменения в поведении\n" +
-                changeInBehavior;
+                changeInBehavior +
+                "\nНиже фото";
     }
 }

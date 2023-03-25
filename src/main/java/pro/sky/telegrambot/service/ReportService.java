@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.service;
 
+import liquibase.pro.packaged.R;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.Report;
@@ -32,5 +33,9 @@ public class ReportService {
     public Report findReportByUserIdAndStatus(Long userId, String status){
         List<Report> reports = reportRepository.findAllByUserIdAndStatus(userId,status);
         return reports.get(0);
+    }
+
+    public List<Long> findIdOfReports(){
+        return reportRepository.findIdOfReports();
     }
 }
