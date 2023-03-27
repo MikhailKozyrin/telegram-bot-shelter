@@ -9,6 +9,7 @@ import com.pengrad.telegrambot.model.request.Keyboard;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.SendPhoto;
 import com.pengrad.telegrambot.response.GetFileResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
@@ -108,17 +109,53 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             answerToStopFromVolunteer(getChatId(update), volunteer);
         }
         if (volunteer.getChatIdUser() == null) {
-            if (READY_TO_WORK.equals(getIncomingMessage(update))) {
+            if ("Проверяет отчет".equals(volunteer.getStatus()) || "Выносит вердикт".equals(volunteer.getStatus())){
+                checkReport(update, volunteer);
+            }
+            else if (READY_TO_WORK.equals(getIncomingMessage(update))) {
                 readyForWork(getChatId(update), volunteer);
             } else if (FINISH_WORK.equals(getIncomingMessage(update))) {
                 endOfVolunteerWork(update, volunteer);
                 readinessForWork(update);
             } else if (CHECK_REPORTS.equals(getIncomingMessage(update))) {
                 checkReports(update,volunteer);
-
             }
         } else {
             sendMessage(volunteer.getChatIdUser(), getIncomingMessage(update));
+        }
+    }
+
+    /**
+     * Работа с отчетом для волонтера
+     * @param update
+     * @param volunteer волонтер
+     */
+    private void checkReport(Update update, Volunteer volunteer){
+        if ("Проверяет отчет".equals(volunteer.getStatus())){
+            Report report = reportService.findReportByStatusAndVolunteerId(CHECKED,getChatId(update));
+            sendMessage(report.getUserId(),"Комментарий волонтера по отчету:");
+            sendMessage(report.getUserId(),getIncomingMessage(update));
+            Keyboard replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                    new String[]{APPROVE},
+                    new String[]{NOT_APPROVE})
+                    .oneTimeKeyboard(true)   // optional
+                    .resizeKeyboard(true)    // optional
+                    .selective(true);        // optional
+            sendMessage(getChatId(update),"Вынесите вердикт", replyKeyboardMarkup);
+            volunteer.setStatus("Выносит вердикт");
+            volunteerService.editVolunteer(volunteer);
+
+        }else if ("Выносит вердикт".equals(volunteer.getStatus())){
+            Report report = reportService.findReportByStatusAndVolunteerId(CHECKED, getChatId(update));
+            if (APPROVE.equals(getIncomingMessage(update))){
+                setStatus(report, "Одобрено");
+                sendMessage(report.getUserId(), "Ваш отчет одобрен");
+            } else if (NOT_APPROVE.equals(getIncomingMessage(update))) {
+                setStatus(report, "Не одобрено");
+                sendMessage(report.getUserId(), "Ваш отчет не одобрен");
+            }
+            sendMessage(getChatId(update), "Благодарим вас за работу");
+            readyForWork(getChatId(update), volunteer);
         }
     }
 
@@ -142,16 +179,23 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param update
      * @param volunteer
      */
-    private void checkReports(Update update, Volunteer volunteer){
+    private void checkReports(Update update, Volunteer volunteer) {
         List<Long> reportsId = reportService.findIdOfReports();
-        if (reportsId.size() == 0){
+        if (reportsId.size() == 0) {
             sendMessage(getChatId(update), "Нет доступных для проверки отчетов");
         } else {
             sendMessage(getChatId(update), "Найден отчет");
-            sendMessage(getChatId(update), reportService.findReport(reportsId.get(0)).toString());
+            Report report = reportService.findReport(reportsId.get(0));
+            report.setStatus(CHECKED);
+            report.setVolunteerId(getChatId(update));
+            reportService.editReport(report);
+            sendMessage(getChatId(update), report.toString());
+            SendPhoto sendPhoto = new SendPhoto(getChatId(update), report.getPicture());
+            telegramBot.execute(sendPhoto);
+            volunteer.setStatus("Проверяет отчет");
+            volunteerService.editVolunteer(volunteer);
+            sendMessage(getChatId(update), "Напишите комментарий к отчету одним сообщением");
         }
-
-
     }
 
     /**
@@ -639,6 +683,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void setStatus(Report report, String status) {
         if (report != null) {
             report.setStatus(status);
+            reportService.editReport(report);
         }
     }
 

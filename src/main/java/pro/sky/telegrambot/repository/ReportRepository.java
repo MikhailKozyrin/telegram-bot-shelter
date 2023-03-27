@@ -8,7 +8,14 @@ import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
+    Report findReportById(Long id);
+
     List<Report> findAllByUserIdAndStatus(Long userId, String status);
-    @Query(value = "SELECT id FROM reports WHERE status = null AND volunteer_id = null",nativeQuery = true)
+    @Query(value = "SELECT id FROM reports WHERE status is null AND volunteer_id is null",nativeQuery = true)
     List<Long> findIdOfReports();
+
+    Report findReportByStatusAndVolunteerId(String status, Long volunteerId);
+
+
+
 }

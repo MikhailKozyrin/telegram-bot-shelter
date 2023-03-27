@@ -1,9 +1,14 @@
 package pro.sky.telegrambot.constants;
 
+import liquibase.pro.packaged.S;
+
 public class Constants {
 
-    // Кнопки для волонтера
+    // Кнопкии команды для волонтера
+    public final static String APPROVE = "Одобрить";
+    public final static String NOT_APPROVE = "Не одобрить";
     public final static String READY_TO_WORK = "Готов к работе";
+    public final static String CHECKED = "Проверяется";
     public final static String DO_NOT_READY_TO_WORK = "Не готов к работе";
     public final static String CHECK_REPORTS = "Просмотр отчетов";
     public final static String FINISH_WORK = "Завершить работу";
