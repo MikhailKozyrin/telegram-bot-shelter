@@ -14,9 +14,7 @@ public class ReportService {
     private ReportRepository reportRepository;
 
     public Report findReport(Long id) {
-        Report report;
-        report = reportRepository.getOne(id);
-        return report;
+        return reportRepository.findReportById(id);
     }
 
     public Report createReport(Report report) {
@@ -37,5 +35,9 @@ public class ReportService {
 
     public List<Long> findIdOfReports(){
         return reportRepository.findIdOfReports();
+    }
+
+    public Report findReportByStatusAndVolunteerId(String status, Long volunteerId){
+        return reportRepository.findReportByStatusAndVolunteerId(status,volunteerId);
     }
 }
