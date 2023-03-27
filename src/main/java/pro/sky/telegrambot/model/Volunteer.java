@@ -18,8 +18,9 @@ public class Volunteer {
     }
 
     public Volunteer() {
-
     }
+
+
 
     public Long getChatId() {
         return chatId;

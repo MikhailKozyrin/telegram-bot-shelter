@@ -66,6 +66,9 @@ public class Constants {
     public final static String WELCOME_TEXT_TAKE_ON_THE_DOG = "В этом разделе Вы найдете дополнительную информацию по разным направлениям. Выберите одно из них!";
     public final static String HOME_IMPROVEMENT_ANSWER = "Очень важно, чтобы питомец чувствовал себя комфортно";
 
+    // REST endpoint testing urls
+    public final static String LOCALHOST_URL = "http://localhost:";
+    public final static String VOLUNTEER_URL = "/pet-shelter/volunteer";
 
     // Buttons text the first section  "INFORMATION_ABOUT_SHELTER"
 
